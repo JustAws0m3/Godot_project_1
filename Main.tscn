@@ -1,9 +1,10 @@
-[gd_scene load_steps=13 format=3 uid="uid://ci1nkihh4sql7"]
+[gd_scene load_steps=14 format=3 uid="uid://ci1nkihh4sql7"]
 
 [ext_resource type="PackedScene" uid="uid://qcpbwegnndl4" path="res://player.tscn" id="2_r0du0"]
 [ext_resource type="PackedScene" uid="uid://cx7im3ai1vqkn" path="res://static_box.tscn" id="2_uu6xs"]
 [ext_resource type="Shader" uid="uid://b7qm5k7pmbp8j" path="res://shader.tres" id="3_r0du0"]
 [ext_resource type="Script" uid="uid://cv0hyj85yiy87" path="res://basic_unpacker.gd" id="4_cm0pq"]
+[ext_resource type="PackedScene" uid="uid://bmtu2j0njtlvr" path="res://path.tscn" id="5_fos0i"]
 
 [sub_resource type="Gradient" id="Gradient_r0du0"]
 interpolation_mode = 2
@@ -50,3 +51,5 @@ compositor = SubResource("Compositor_r0du0")
 
 [node name="Unpacker" type="Node" parent="."]
 script = ExtResource("4_cm0pq")
+
+[node name="Path3D" parent="." instance=ExtResource("5_fos0i")]

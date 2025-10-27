@@ -1,7 +1,6 @@
 class_name Unpacker
 extends Node
 
-@export var next: Unpacker
-
-func unpack():
-	print("Hello, World")
+func unpack() -> Array[Unpacker]:
+	print("You should probably override the unpack method!")
+	return []
