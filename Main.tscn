@@ -1,0 +1,52 @@
+[gd_scene load_steps=13 format=3 uid="uid://ci1nkihh4sql7"]
+
+[ext_resource type="PackedScene" uid="uid://qcpbwegnndl4" path="res://player.tscn" id="2_r0du0"]
+[ext_resource type="PackedScene" uid="uid://cx7im3ai1vqkn" path="res://static_box.tscn" id="2_uu6xs"]
+[ext_resource type="Shader" uid="uid://b7qm5k7pmbp8j" path="res://shader.tres" id="3_r0du0"]
+[ext_resource type="Script" uid="uid://cv0hyj85yiy87" path="res://basic_unpacker.gd" id="4_cm0pq"]
+
+[sub_resource type="Gradient" id="Gradient_r0du0"]
+interpolation_mode = 2
+colors = PackedColorArray(0, 0.5686275, 1, 1, 1, 1, 1, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_cm0pq"]
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_fos0i"]
+noise = SubResource("FastNoiseLite_cm0pq")
+color_ramp = SubResource("Gradient_r0du0")
+seamless = true
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_cm0pq"]
+shader = ExtResource("3_r0du0")
+shader_parameter/tex = SubResource("NoiseTexture2D_fos0i")
+
+[sub_resource type="Sky" id="Sky_fos0i"]
+sky_material = SubResource("ShaderMaterial_cm0pq")
+
+[sub_resource type="Environment" id="Environment_uu6xs"]
+background_mode = 2
+sky = SubResource("Sky_fos0i")
+sky_rotation = Vector3(0, 0, 1.5707964)
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_uu6xs"]
+
+[sub_resource type="Compositor" id="Compositor_r0du0"]
+
+[node name="Node3D" type="Node3D"]
+
+[node name="StaticBox" parent="." instance=ExtResource("2_uu6xs")]
+transform = Transform3D(10, 0, 0, 0, 1, 0, 0, 0, 10, 0, -3, 0)
+
+[node name="Player" parent="." instance=ExtResource("2_r0du0")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.219625, 0)
+
+[node name="OmniLight3D" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.7347097, 0)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_uu6xs")
+camera_attributes = SubResource("CameraAttributesPractical_uu6xs")
+compositor = SubResource("Compositor_r0du0")
+
+[node name="Unpacker" type="Node" parent="."]
+script = ExtResource("4_cm0pq")
