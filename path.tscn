@@ -1,0 +1,21 @@
+[gd_scene load_steps=2 format=3 uid="uid://bmtu2j0njtlvr"]
+
+[sub_resource type="Curve3D" id="Curve3D_cm0pq"]
+
+[node name="Path3D" type="Path3D"]
+curve = SubResource("Curve3D_cm0pq")
+
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="."]
+use_collision = true
+polygon = PackedVector2Array(-1.5, 0, -1.5, 1, 1.5, 1, 1.5, 0)
+mode = 2
+path_node = NodePath("..")
+path_interval_type = 0
+path_interval = 1.0
+path_simplify_angle = 0.0
+path_rotation = 2
+path_rotation_accurate = false
+path_local = false
+path_continuous_u = true
+path_u_distance = 1.0
+path_joined = false
