@@ -19,7 +19,7 @@ class BoxDistanceData:
 		self.distance = distance
 
 func _ready() -> void:
-	unpack(1)
+	unpack()
 	
 func create_box(rng:RandomNumberGenerator) -> Node3D:
 	var new_box = STATIC_BOX.instantiate() as Node3D
@@ -62,7 +62,7 @@ func create_all_paths(rng:RandomNumberGenerator,boxes:Array):
 		create_path(box_distances[i])
 	
 
-func unpack(seed:int) -> Array[Unpacker]:
+func unpack() -> Array[Unpacker]:
 	#Setup RNG
 	var rng = RandomNumberGenerator.new()
 	rng.seed = seed

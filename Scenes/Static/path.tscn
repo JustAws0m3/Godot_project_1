@@ -1,4 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://bmtu2j0njtlvr"]
+[gd_scene load_steps=3 format=3 uid="uid://bmtu2j0njtlvr"]
+
+[ext_resource type="Material" uid="uid://8nfabsfre24" path="res://Textures/red.tres" id="1_r82uo"]
 
 [sub_resource type="Curve3D" id="Curve3D_cm0pq"]
 
@@ -19,3 +21,4 @@ path_local = false
 path_continuous_u = true
 path_u_distance = 1.0
 path_joined = false
+material = ExtResource("1_r82uo")
