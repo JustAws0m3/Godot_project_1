@@ -56,9 +56,3 @@ noise = ExtResource("5_fos0i")
 
 [node name="Unpacker" type="Node" parent="."]
 script = ExtResource("6_3dxm6")
-MAP_SIZE = null
-SPAWN_DIST_MIN = null
-SPAWN_DIST_MAX = null
-SPAWN_BOUND = null
-N_POINTS = null
-seed = null
