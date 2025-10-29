@@ -18,8 +18,8 @@ const GREEN = preload("uid://di5vgqcoebvue")
 #Point paramaters
 @export var n_pois := 3
 @export var poi_bound = 20
-@export var min_poi_dist_ratio := 0.3
-@export var max_poi_dist_ratio := 0.7
+@export_range(0,1.0,0.001) var min_poi_dist_ratio := 0.3
+@export_range(0,1.0,0.001) var max_poi_dist_ratio := 0.7
 
 var WORLD_BORDER_POSITIVE = map_size / 2
 var WORLD_BORDER_NEGATIVE = -map_size / 2
@@ -76,6 +76,7 @@ func calculate_vector_map_bounds(pos:Vector2,vec:Vector2) -> Array[float]:
 	var x_neg = ((WORLD_BORDER_NEGATIVE.x + poi_bound) - pos.x) / vec.x
 	var y_pos = ((WORLD_BORDER_POSITIVE.y - poi_bound) - pos.y) / vec.y
 	var y_neg = ((WORLD_BORDER_NEGATIVE.y + poi_bound) - pos.y) / vec.y
+	print(vec,x_pos,x_neg,y_pos,y_neg)
 	return [min(x_pos,y_pos),max(x_neg,y_neg)]
 	
 
