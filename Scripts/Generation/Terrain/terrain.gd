@@ -8,12 +8,12 @@ const PRECED_TERRAIN = preload("uid://dvthq2uk78b2m")
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	for x in range(-5,5):
-		for y in range(-5,5):
-			generate_terrain(Vector2(x,y))
+	for x in range(-2,2):
+		for y in range(-2,2):
+			generate_chunck(Vector2(x,y))
 	pass # Replace with function body.
 
-func generate_terrain(chunck:Vector2):
+func generate_chunck(chunck:Vector2):
 	var x_offset := chunck.x * chunck_size
 	var y_offset := chunck.y * chunck_size
 	
@@ -31,4 +31,3 @@ func generate_terrain(chunck:Vector2):
 	
 	
 	add_child(new_chunck)
-	print("Generated Terrain")
