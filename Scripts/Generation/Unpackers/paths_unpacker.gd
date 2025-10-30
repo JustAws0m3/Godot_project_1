@@ -80,15 +80,17 @@ func place_point(pos:Vector3,material:StandardMaterial3D) -> Node3D:
 	
 #Method for placing spawn points
 func place_spawns(rng:RandomNumberGenerator) -> Array[Node3D]:	
+	var x_offset = rng.randf_range(spawn_dist_min,spawn_dist_max)
+	var z_offset = rng.randf_range(world_border_negative.z + spawn_bound, world_border_positive.z - spawn_bound)
 	var spawn_point_a_pos = Vector3(
-		world_border_negative.x + rng.randf_range(spawn_dist_min,spawn_dist_max),
+		world_border_negative.x + x_offset,
 		0,
-		rng.randf_range(world_border_negative.z + spawn_bound, world_border_positive.z - spawn_bound)
+		z_offset
 	)
 	var spawn_point_b_pos = Vector3(
-		world_border_positive.x - rng.randf_range(spawn_dist_min,spawn_dist_max),
+		world_border_positive.x - x_offset,
 		0,
-		rng.randf_range(world_border_negative.z + spawn_bound, world_border_positive.z - spawn_bound)
+		-z_offset
 	)
 	
 	var spawn_point_a = place_point(spawn_point_a_pos,RED)
@@ -159,9 +161,20 @@ func get_evenly_spaced_numbers(a: float, b: float, n: int) -> Array[float]:
 		return result_array
 
 	var step_size: float = (b - a) / (n - 1)
-	for i in range(n+1):
+	for i in range(n):
 		result_array.push_back(a + (i * step_size))
 	return result_array
+	
+#Shuffle the array with a specified rng
+func custom_shuffle(rng: RandomNumberGenerator, array_to_shuffle: Array) -> void:
+	var n = array_to_shuffle.size()
+	for i in range(n - 1, 0, -1):
+		# Pick a random index from 0 to i
+		var j = rng.randi_range(0, i)
+		# Swap array_to_shuffle[i] with the element at random index j
+		var temp = array_to_shuffle[i]
+		array_to_shuffle[i] = array_to_shuffle[j]
+		array_to_shuffle[j] = temp
 
 #Generate points for pois
 func generate_poi_points(rng:RandomNumberGenerator,spawn_a:Vector3,spawn_b:Vector3) -> Array[Node3D]:
@@ -173,7 +186,7 @@ func generate_poi_points(rng:RandomNumberGenerator,spawn_a:Vector3,spawn_b:Vecto
 	
 	#Handle horizontal poi paramaters
 	if poi_shuffle_hor:
-		poi_hor_dists.shuffle()
+		custom_shuffle(rng,poi_hor_dists)
 	elif poi_flip_hor:
 		poi_hor_dists.reverse()
 	
