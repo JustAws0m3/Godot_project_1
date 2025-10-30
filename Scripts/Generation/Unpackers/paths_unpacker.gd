@@ -28,8 +28,18 @@ const GREEN = preload("uid://di5vgqcoebvue")
 @export_range(0,1.0,0.001) var min_poi_dist := 0.3
 ##The maximum distance at which pois will generate from spawn a in relation to distance between the spawns
 @export_range(0,1.0,0.001) var max_poi_dist := 0.7
-##The variance in how the pois will generate along the axes between spawns
+##The variance in how the pois will generate along the axis between spawns
 @export_range(0,1.0,0.001) var poi_dist_variance := 0.1
+##The minimum distance at which pois will generate on the axis perpendicular to the axis between spawns
+@export_range(0,1.0,0.001) var min_poi_hor_dist := 0.1
+##The maximum distance at which pois will generate on the axis perpendicular to the axis between spawns
+@export_range(0,1.0,0.001) var max_poi_hor_dist := 0.9
+##The variance in how the pois will generate along the axis perpendicular to the axis between spawns
+@export_range(0,1.0,0.001) var poi_hor_dist_variance := 0.25
+##If true, flip the pois horizontally
+@export var poi_flip_hor := false
+##If true, shufffle the horizontal positions of pois
+@export var poi_shuffle_hor := true
 
 var world_border_positive
 var world_border_negative
@@ -114,22 +124,25 @@ func clamped_uniform_randf_range(rng:RandomNumberGenerator,min_v:float,max_v:flo
 	return rng.randf_range(max(min_v,base - variance),min(max_v,base + variance))
 
 #Generate a place to put a random poi
-func generate_poi_vector(rng:RandomNumberGenerator,pos_a:Vector3,pos_b:Vector3,base_dist:float) -> Vector3:
+func generate_poi_vector(rng:RandomNumberGenerator,pos_a:Vector3,pos_b:Vector3,base_dist:float,hor_base_dist:float) -> Vector3:
 	var pos_a_v2 = Vector2(pos_a.x,pos_a.z)
 	var pos_b_v2 = Vector2(pos_b.x,pos_b.z)
 	
 	#Determine the distance to place the poi at from the first spawn point
 	var dist = clamped_uniform_randf_range(rng,min_poi_dist,max_poi_dist,base_dist,poi_dist_variance)
-	print(dist)
 	
-	#Get the vector parallel to vector between the two spawn points
+	#Get the vector parallel to vector between the two spawn points (perp is for perpendicular)
 	var interm_pos = (pos_a_v2 * dist) + (pos_b_v2 * (1 - dist))
 	var interm_vector = (pos_a - pos_b).normalized()
 	var perp_interm_vector = Vector2(interm_vector.z,-interm_vector.x)
 	
-	#Calculate the distance along the vector to place the point at
+	#Calculate the horizontal distance along the vector to place the point at
 	var perp_dist_bounds = calculate_vector_map_bounds(interm_pos,perp_interm_vector)
-	var added_vector = perp_interm_vector * rng.randf_range(perp_dist_bounds[0],perp_dist_bounds[1])
+	var hor_position_unscaled = clamped_uniform_randf_range(rng,min_poi_hor_dist,max_poi_hor_dist,hor_base_dist,poi_hor_dist_variance)
+	var hor_position = (perp_dist_bounds[1] - perp_dist_bounds[0]) * hor_position_unscaled + perp_dist_bounds[0]
+	var added_vector = perp_interm_vector * hor_position
+	
+	#Calculate the distance along the vector to place the point at
 	var result_vector = interm_pos + added_vector
 	return Vector3(result_vector.x,0,result_vector.y)
 
@@ -153,9 +166,20 @@ func get_evenly_spaced_numbers(a: float, b: float, n: int) -> Array[float]:
 #Generate points for pois
 func generate_poi_points(rng:RandomNumberGenerator,spawn_a:Vector3,spawn_b:Vector3) -> Array[Node3D]:
 	var result: Array[Node3D] = []
+	
+	#Determine point base placement
 	var poi_dists = get_evenly_spaced_numbers(min_poi_dist,max_poi_dist,n_pois)
+	var poi_hor_dists = get_evenly_spaced_numbers(min_poi_hor_dist,max_poi_hor_dist,n_pois)
+	
+	#Handle horizontal poi paramaters
+	if poi_shuffle_hor:
+		poi_hor_dists.shuffle()
+	elif poi_flip_hor:
+		poi_hor_dists.reverse()
+	
+	#Determine final positions and place the points
 	for i in range(n_pois):
-		var new_vector = generate_poi_vector(rng,spawn_a,spawn_b,poi_dists[i])
+		var new_vector = generate_poi_vector(rng,spawn_a,spawn_b,poi_dists[i],poi_hor_dists[i])
 		var new_point = place_point(new_vector,GREEN)
 		result.append(new_point)
 	return result;
