@@ -48,6 +48,9 @@ environment = SubResource("Environment_uu6xs")
 camera_attributes = SubResource("CameraAttributesPractical_uu6xs")
 compositor = SubResource("Compositor_r0du0")
 
-[node name="Unpacker" type="Node" parent="."]
+[node name="Map" type="Node3D" parent="."]
+
+[node name="Unpacker" type="Node" parent="." node_paths=PackedStringArray("base_node")]
 script = ExtResource("6_3dxm6")
 poi_hor_dist_variance = 0.1
+base_node = NodePath("../Map")

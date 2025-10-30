@@ -41,6 +41,10 @@ const GREEN = preload("uid://di5vgqcoebvue")
 ##If true, shufffle the horizontal positions of pois
 @export var poi_shuffle_hor := true
 
+#Unpacker stuff
+##The unpackers to unpack next
+@export var next_unpack: Array[Unpacker]
+
 var world_border_positive
 var world_border_negative
 
@@ -74,7 +78,8 @@ func place_point(pos:Vector3,material:StandardMaterial3D) -> Node3D:
 	point.position = pos
 	var point_mesh = point.get_node("./MeshInstance3D") as MeshInstance3D
 	point_mesh.material_override = material
-	add_child(point)
+	if base_node:
+		base_node.add_child(point)
 	return point
 	
 	
@@ -206,4 +211,4 @@ func unpack() -> Array[Unpacker]:
 	var spawns = place_spawns(rng)
 	var pois = generate_poi_points(rng,spawns[0].position,spawns[1].position)
 	
-	return []
+	return next_unpack
