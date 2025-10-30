@@ -56,5 +56,4 @@ noise = ExtResource("5_fos0i")
 
 [node name="Unpacker" type="Node" parent="."]
 script = ExtResource("6_3dxm6")
-map_size = Vector3(300, 0, 300)
 seed = 1

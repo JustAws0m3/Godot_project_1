@@ -7,19 +7,29 @@ const RED = preload("uid://8nfabsfre24")
 const BLUE = preload("uid://cmmc4juj1a1kd")
 const GREEN = preload("uid://di5vgqcoebvue")
 
-#Map paramaters
-@export var map_size := Vector3(300,30,200)
+#Map paramaters4
+##Determines the size of the map
+@export var map_size := Vector3(200,30,150)
 
 #Spawn Paramaters
+## The minimum distance the spawns can be from the back of the map
 @export var spawn_dist_min := 15
-@export var spawn_dist_max := 304
+## The maximum distance the spawns can be from the back of the map
+@export var spawn_dist_max := 30
+## The maximum distance the spawns can be from the sides of the map
 @export var spawn_bound := 20
 
 #Point paramaters
+##The number of main pois to generate
 @export var n_pois := 3
+##The distence main pois must be from the edge of the map
 @export var poi_bound = 20
-@export_range(0,1.0,0.001) var min_poi_dist_ratio := 0.3
-@export_range(0,1.0,0.001) var max_poi_dist_ratio := 0.7
+##The minimum distance at which pois will generate from spawn a in relation to distance between the spawns
+@export_range(0,1.0,0.001) var min_poi_dist := 0.3
+##The maximum distance at which pois will generate from spawn a in relation to distance between the spawns
+@export_range(0,1.0,0.001) var max_poi_dist := 0.7
+##The variance in how the pois will generate along the axes between spawns
+@export_range(0,1.0,0.001) var poi_dist_variance := 0.1
 
 var world_border_positive
 var world_border_negative
@@ -84,11 +94,6 @@ func calculate_vector_map_bounds(pos:Vector2,vec:Vector2) -> Array[float]:
 	var dist_to_positive_border = (positive_border - pos) / vec
 	var dist_to_negative_border = (-negative_border + pos) / -vec
 	
-	print(positive_border,negative_border)
-	
-	print("dist to pos, neg: " + str(dist_to_positive_border) + " " + str(dist_to_negative_border))
-	print("double check: " + str(pos + (dist_to_positive_border * vec)) + ", " + str(pos - (dist_to_negative_border * vec)))
-	
 	#Sort diatances between positive and negative
 	var all_values = [dist_to_positive_border.x,dist_to_negative_border.x,dist_to_positive_border.y,dist_to_negative_border.y]
 	var positive_values = []
@@ -103,27 +108,54 @@ func calculate_vector_map_bounds(pos:Vector2,vec:Vector2) -> Array[float]:
 	var smallest_positive = 0 if positive_values.is_empty() else positive_values.min()
 	var largest_negative = 0 if negative_values.is_empty() else negative_values.max()
 	return [largest_negative,smallest_positive]
-	
 
-func generate_poi_vector(rng:RandomNumberGenerator,pos_a:Vector3,pos_b:Vector3) -> Vector3:
+#Return a uniformily random number between min_v and max_v within the range of base +- variance
+func clamped_uniform_randf_range(rng:RandomNumberGenerator,min_v:float,max_v:float,base:float,variance:float):
+	return rng.randf_range(max(min_v,base - variance),min(max_v,base + variance))
+
+#Generate a place to put a random poi
+func generate_poi_vector(rng:RandomNumberGenerator,pos_a:Vector3,pos_b:Vector3,base_dist:float) -> Vector3:
 	var pos_a_v2 = Vector2(pos_a.x,pos_a.z)
 	var pos_b_v2 = Vector2(pos_b.x,pos_b.z)
 	
-	var dist = rng.randf_range(min_poi_dist_ratio,max_poi_dist_ratio)
+	#Determine the distance to place the poi at from the first spawn point
+	var dist = clamped_uniform_randf_range(rng,min_poi_dist,max_poi_dist,base_dist,poi_dist_variance)
+	print(dist)
+	
+	#Get the vector parallel to vector between the two spawn points
 	var interm_pos = (pos_a_v2 * dist) + (pos_b_v2 * (1 - dist))
 	var interm_vector = (pos_a - pos_b).normalized()
 	var perp_interm_vector = Vector2(interm_vector.z,-interm_vector.x)
+	
+	#Calculate the distance along the vector to place the point at
 	var perp_dist_bounds = calculate_vector_map_bounds(interm_pos,perp_interm_vector)
 	var added_vector = perp_interm_vector * rng.randf_range(perp_dist_bounds[0],perp_dist_bounds[1])
 	var result_vector = interm_pos + added_vector
-	print("Placed at " + str(result_vector) + " with min and max " + str(perp_dist_bounds) + " and added vector " + str(added_vector / perp_interm_vector,perp_interm_vector) + " at dist " + str(dist))
 	return Vector3(result_vector.x,0,result_vector.y)
-	
-	
+
+#Get evenly spaced numbers between a and b in an array, incluscive
+func get_evenly_spaced_numbers(a: float, b: float, n: int) -> Array[float]:
+	var result_array: Array[float] = []
+	if n <= 0:
+		result_array.push_back((a + b) / 2)
+		return result_array
+
+	if n == 1:
+		result_array.push_back(a)
+		result_array.push_back(b)
+		return result_array
+
+	var step_size: float = (b - a) / (n - 1)
+	for i in range(n+1):
+		result_array.push_back(a + (i * step_size))
+	return result_array
+
+#Generate points for pois
 func generate_poi_points(rng:RandomNumberGenerator,spawn_a:Vector3,spawn_b:Vector3) -> Array[Node3D]:
 	var result: Array[Node3D] = []
+	var poi_dists = get_evenly_spaced_numbers(min_poi_dist,max_poi_dist,n_pois)
 	for i in range(n_pois):
-		var new_vector = generate_poi_vector(rng,spawn_a,spawn_b)
+		var new_vector = generate_poi_vector(rng,spawn_a,spawn_b,poi_dists[i])
 		var new_point = place_point(new_vector,GREEN)
 		result.append(new_point)
 	return result;
