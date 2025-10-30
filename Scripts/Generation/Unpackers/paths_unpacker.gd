@@ -8,11 +8,11 @@ const BLUE = preload("uid://cmmc4juj1a1kd")
 const GREEN = preload("uid://di5vgqcoebvue")
 
 #Map paramaters
-@export var map_size := Vector3(300,30,150)
+@export var map_size := Vector3(300,30,200)
 
 #Spawn Paramaters
 @export var spawn_dist_min := 15
-@export var spawn_dist_max := 30
+@export var spawn_dist_max := 304
 @export var spawn_bound := 20
 
 #Point paramaters
@@ -21,10 +21,16 @@ const GREEN = preload("uid://di5vgqcoebvue")
 @export_range(0,1.0,0.001) var min_poi_dist_ratio := 0.3
 @export_range(0,1.0,0.001) var max_poi_dist_ratio := 0.7
 
-var WORLD_BORDER_POSITIVE = map_size / 2
-var WORLD_BORDER_NEGATIVE = -map_size / 2
+var world_border_positive
+var world_border_negative
 
 func _ready():
+	world_border_positive = map_size / 2
+	world_border_negative = -map_size / 2
+	
+	var point = place_point(Vector3(0,-10,0),RED)
+	point.scale = Vector3(map_size.x,1,map_size.z)
+	
 	unpack()
 
 class BoxDistanceData:
@@ -55,14 +61,14 @@ func place_point(pos:Vector3,material:StandardMaterial3D) -> Node3D:
 #Method for placing spawn points
 func place_spawns(rng:RandomNumberGenerator) -> Array[Node3D]:	
 	var spawn_point_a_pos = Vector3(
-		WORLD_BORDER_NEGATIVE.x + rng.randf_range(spawn_dist_min,spawn_dist_max),
+		world_border_negative.x + rng.randf_range(spawn_dist_min,spawn_dist_max),
 		0,
-		rng.randf_range(WORLD_BORDER_NEGATIVE.z + spawn_bound, WORLD_BORDER_POSITIVE.z - spawn_bound)
+		rng.randf_range(world_border_negative.z + spawn_bound, world_border_positive.z - spawn_bound)
 	)
 	var spawn_point_b_pos = Vector3(
-		WORLD_BORDER_POSITIVE.x - rng.randf_range(spawn_dist_min,spawn_dist_max),
+		world_border_positive.x - rng.randf_range(spawn_dist_min,spawn_dist_max),
 		0,
-		rng.randf_range(WORLD_BORDER_NEGATIVE.z + spawn_bound, WORLD_BORDER_POSITIVE.z - spawn_bound)
+		rng.randf_range(world_border_negative.z + spawn_bound, world_border_positive.z - spawn_bound)
 	)
 	
 	var spawn_point_a = place_point(spawn_point_a_pos,RED)
@@ -72,12 +78,31 @@ func place_spawns(rng:RandomNumberGenerator) -> Array[Node3D]:
 
 #Gets the maximum positive and negative distances you can travel along a vector from a point without going out of bounds
 func calculate_vector_map_bounds(pos:Vector2,vec:Vector2) -> Array[float]:
-	var x_pos = ((WORLD_BORDER_POSITIVE.x - poi_bound) - pos.x) / vec.x
-	var x_neg = ((WORLD_BORDER_NEGATIVE.x + poi_bound) - pos.x) / vec.x
-	var y_pos = ((WORLD_BORDER_POSITIVE.y - poi_bound) - pos.y) / vec.y
-	var y_neg = ((WORLD_BORDER_NEGATIVE.y + poi_bound) - pos.y) / vec.y
-	print(vec,x_pos,x_neg,y_pos,y_neg)
-	return [min(x_pos,y_pos),max(x_neg,y_neg)]
+	#Calculate thbe distance needed to travel from pos along the vector to reach the world border
+	var positive_border = Vector2(world_border_positive.x - poi_bound, world_border_positive.z - poi_bound)
+	var negative_border = Vector2(world_border_negative.x + poi_bound, world_border_negative.z + poi_bound)
+	var dist_to_positive_border = (positive_border - pos) / vec
+	var dist_to_negative_border = (-negative_border + pos) / -vec
+	
+	print(positive_border,negative_border)
+	
+	print("dist to pos, neg: " + str(dist_to_positive_border) + " " + str(dist_to_negative_border))
+	print("double check: " + str(pos + (dist_to_positive_border * vec)) + ", " + str(pos - (dist_to_negative_border * vec)))
+	
+	#Sort diatances between positive and negative
+	var all_values = [dist_to_positive_border.x,dist_to_negative_border.x,dist_to_positive_border.y,dist_to_negative_border.y]
+	var positive_values = []
+	var negative_values = []
+	for x in all_values:
+		if x > 0:
+			positive_values.append(x)
+		elif x < 0:
+			negative_values.append(x)
+	
+	#Return the largest negative and smallest positive
+	var smallest_positive = 0 if positive_values.is_empty() else positive_values.min()
+	var largest_negative = 0 if negative_values.is_empty() else negative_values.max()
+	return [largest_negative,smallest_positive]
 	
 
 func generate_poi_vector(rng:RandomNumberGenerator,pos_a:Vector3,pos_b:Vector3) -> Vector3:
@@ -87,9 +112,11 @@ func generate_poi_vector(rng:RandomNumberGenerator,pos_a:Vector3,pos_b:Vector3) 
 	var dist = rng.randf_range(min_poi_dist_ratio,max_poi_dist_ratio)
 	var interm_pos = (pos_a_v2 * dist) + (pos_b_v2 * (1 - dist))
 	var interm_vector = (pos_a - pos_b).normalized()
-	var perp_interm_vector = Vector2(interm_vector.y,-interm_vector.x)
+	var perp_interm_vector = Vector2(interm_vector.z,-interm_vector.x)
 	var perp_dist_bounds = calculate_vector_map_bounds(interm_pos,perp_interm_vector)
-	var result_vector = interm_pos + (perp_interm_vector * rng.randf_range(perp_dist_bounds[1],perp_dist_bounds[0]))
+	var added_vector = perp_interm_vector * rng.randf_range(perp_dist_bounds[0],perp_dist_bounds[1])
+	var result_vector = interm_pos + added_vector
+	print("Placed at " + str(result_vector) + " with min and max " + str(perp_dist_bounds) + " and added vector " + str(added_vector / perp_interm_vector,perp_interm_vector) + " at dist " + str(dist))
 	return Vector3(result_vector.x,0,result_vector.y)
 	
 	
