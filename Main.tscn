@@ -1,11 +1,9 @@
-[gd_scene load_steps=15 format=3 uid="uid://ci1nkihh4sql7"]
+[gd_scene load_steps=13 format=3 uid="uid://ci1nkihh4sql7"]
 
 [ext_resource type="PackedScene" uid="uid://qcpbwegnndl4" path="res://Scenes/Player/player.tscn" id="2_r0du0"]
 [ext_resource type="PackedScene" uid="uid://cx7im3ai1vqkn" path="res://Scenes/Static/static_box.tscn" id="2_uu6xs"]
 [ext_resource type="Shader" uid="uid://b7qm5k7pmbp8j" path="res://shader.tres" id="3_r0du0"]
-[ext_resource type="Script" uid="uid://bcu5y85w5y8ln" path="res://Scripts/Generation/Terrain/terrain.gd" id="4_cm0pq"]
-[ext_resource type="FastNoiseLite" uid="uid://ddf11jcclt42e" path="res://terrain_noise.tres" id="5_fos0i"]
-[ext_resource type="Script" uid="uid://cm7lmgu3k5rhw" path="res://Scripts/Generation/Unpackers/paths_unpacker.gd" id="6_3dxm6"]
+[ext_resource type="Script" uid="uid://cm7lmgu3k5rhw" path="res://Scripts/Generation/Unpackers/pois_unpacker.gd" id="6_3dxm6"]
 
 [sub_resource type="Gradient" id="Gradient_r0du0"]
 interpolation_mode = 2
@@ -49,10 +47,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.7347097, 0)
 environment = SubResource("Environment_uu6xs")
 camera_attributes = SubResource("CameraAttributesPractical_uu6xs")
 compositor = SubResource("Compositor_r0du0")
-
-[node name="Terrain" type="Node" parent="."]
-script = ExtResource("4_cm0pq")
-noise = ExtResource("5_fos0i")
 
 [node name="Unpacker" type="Node" parent="."]
 script = ExtResource("6_3dxm6")
