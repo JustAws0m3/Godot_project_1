@@ -6,15 +6,16 @@ const PATH : PackedScene = preload("uid://bmtu2j0njtlvr")
 const RED = preload("uid://8nfabsfre24")
 const BLUE = preload("uid://cmmc4juj1a1kd")
 const GREEN = preload("uid://di5vgqcoebvue")
+const BLACK = preload("uid://cqnjj0rlirarr")
 
 #Map paramaters4
 ##Determines the size of the map
 @export var map_size := Vector3(200,30,150)
 
 #Spawn Paramaters
-## The minimum distance the spawns can be from the back of the map
+## The minimum distance the spawns can be from the back of the map (incluscive)
 @export var spawn_dist_min := 15
-## The maximum distance the spawns can be from the back of the map
+## The maximum distance the spawns can be from the back of the map (incluscive)
 @export var spawn_dist_max := 30
 ## The maximum distance the spawns can be from the sides of the map
 @export var spawn_bound := 20
@@ -39,7 +40,19 @@ const GREEN = preload("uid://di5vgqcoebvue")
 ##If true, flip the pois horizontally
 @export var poi_flip_hor := false
 ##If true, shufffle the horizontal positions of pois
-@export var poi_shuffle_hor := true
+@export var poi_shuffle_hor := false
+
+#Unrelated point paramaters
+##The minimum number of unrelated pois to generate (incluscive)
+@export var min_unrelated_poi := 1
+##The maximum number of unrelated pois to generate (incluscive)
+@export var max_unrelated_poi := 3
+##The distence unrelated pois must be from the edge of the map
+@export var unrelated_poi_bound := 20
+##The distance each unrelated poi must be from other points. If a place can't be found for a point, it won't be placed
+@export var unrelated_poi_dist_from_other_points := 30
+##The amount of attempts the generator will make at placing unrelated pois before giving up
+@export var unrelated_poi_placement_attempts := 300
 
 #Unpacker stuff
 ##The unpackers to unpack next
@@ -201,7 +214,34 @@ func generate_poi_points(rng:RandomNumberGenerator,spawn_a:Vector3,spawn_b:Vecto
 		var new_point = place_point(new_vector,GREEN)
 		result.append(new_point)
 	return result;
-	
+
+#Method for asking if placement of an unrelated point is valid
+func is_unrelated_poi_placement_valid(proposal:Vector3, points:Array[Node3D]) -> bool:
+	for point in points:
+		if proposal.distance_to(point.position) <= unrelated_poi_dist_from_other_points:
+			return false
+	return true
+
+#Generate points unrelated to objectives
+func generate_unrelated_poi_points(rng:RandomNumberGenerator, points:Array[Node3D]) -> Array[Node3D]:
+	points = points.duplicate()
+	var result :Array[Node3D]  = []
+	var n_points = rng.randi_range(min_unrelated_poi,max_unrelated_poi)
+	for i in range(unrelated_poi_placement_attempts):
+		var proposal := Vector3(
+			rng.randf_range(world_border_positive.x - unrelated_poi_bound,world_border_negative.x + unrelated_poi_bound),
+			0,
+			rng.randf_range(world_border_positive.z - unrelated_poi_bound,world_border_negative.z + unrelated_poi_bound)
+		)
+		if is_unrelated_poi_placement_valid(proposal,points):
+			var point := place_point(proposal,BLACK)
+			points.append(point)
+			result.append(point)
+		if result.size() >= n_pois:
+			return result
+	return result
+			
+		
 
 func unpack() -> Array[Unpacker]:
 	var rng := RandomNumberGenerator.new()
@@ -210,5 +250,7 @@ func unpack() -> Array[Unpacker]:
 	# Place Spawns
 	var spawns = place_spawns(rng)
 	var pois = generate_poi_points(rng,spawns[0].position,spawns[1].position)
+	var spawns_and_pois = spawns.duplicate() + pois.duplicate()
+	var unrelated = generate_unrelated_poi_points(rng,spawns_and_pois)
 	
 	return next_unpack
