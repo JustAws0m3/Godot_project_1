@@ -1,11 +1,9 @@
-[gd_scene load_steps=16 format=3 uid="uid://ci1nkihh4sql7"]
+[gd_scene load_steps=13 format=3 uid="uid://ci1nkihh4sql7"]
 
 [ext_resource type="PackedScene" uid="uid://qcpbwegnndl4" path="res://Scenes/Player/player.tscn" id="2_r0du0"]
 [ext_resource type="PackedScene" uid="uid://cx7im3ai1vqkn" path="res://Scenes/Static/static_box.tscn" id="2_uu6xs"]
 [ext_resource type="Shader" uid="uid://b7qm5k7pmbp8j" path="res://shader.tres" id="3_r0du0"]
-[ext_resource type="Script" uid="uid://drulj233d3uj4" path="res://Scripts/Generation/Unpackers/unpacker_master.gd" id="5_fos0i"]
 [ext_resource type="Script" uid="uid://cm7lmgu3k5rhw" path="res://Scripts/Generation/Unpackers/pois_unpacker.gd" id="6_3dxm6"]
-[ext_resource type="Script" uid="uid://crg3sqx6h33yo" path="res://blockout_unpacker.gd" id="6_lgr22"]
 
 [sub_resource type="Gradient" id="Gradient_r0du0"]
 interpolation_mode = 2
@@ -34,8 +32,6 @@ sky_rotation = Vector3(0, 0, 1.5707964)
 
 [sub_resource type="Compositor" id="Compositor_r0du0"]
 
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_3dxm6"]
-
 [node name="Node3D" type="Node3D"]
 
 [node name="StaticBox" parent="." instance=ExtResource("2_uu6xs")]
@@ -54,16 +50,26 @@ compositor = SubResource("Compositor_r0du0")
 
 [node name="Map" type="Node3D" parent="."]
 
-[node name="UnpackerMaster" type="Node" parent="." node_paths=PackedStringArray("base_unpacker")]
-script = ExtResource("5_fos0i")
-base_unpacker = NodePath("PoisUnpacker")
-
-[node name="PoisUnpacker" type="Node" parent="UnpackerMaster" node_paths=PackedStringArray("next_unpack", "base_node")]
+[node name="Unpacker" type="Node" parent="." node_paths=PackedStringArray("base_node")]
 script = ExtResource("6_3dxm6")
-poi_height_noise = SubResource("FastNoiseLite_3dxm6")
+map_size = null
+spawn_dist_min = null
+spawn_dist_max = null
+spawn_bound = null
+n_pois = null
+poi_bound = null
+min_poi_dist = null
+max_poi_dist = null
+poi_dist_variance = null
+min_poi_hor_dist = null
+max_poi_hor_dist = null
 poi_hor_dist_variance = 0.1
-next_unpack = [NodePath("../BlockoutUnpacker")]
-base_node = NodePath("../../Map")
-
-[node name="BlockoutUnpacker" type="Node" parent="UnpackerMaster"]
-script = ExtResource("6_lgr22")
+poi_flip_hor = null
+poi_shuffle_hor = null
+min_unrelated_poi = null
+max_unrelated_poi = null
+unrelated_poi_bound = null
+unrelated_poi_dist_from_other_points = null
+unrelated_poi_placement_attempts = null
+seed = null
+base_node = NodePath("../Map")

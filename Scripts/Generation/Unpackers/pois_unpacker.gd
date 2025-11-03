@@ -8,9 +8,11 @@ const BLUE = preload("uid://cmmc4juj1a1kd")
 const GREEN = preload("uid://di5vgqcoebvue")
 const BLACK = preload("uid://cqnjj0rlirarr")
 
-#Map paramaters4
+#Map paramaters
 ##Determines the size of the map
 @export var map_size := Vector3(200,30,150)
+##Determines the heights at which the pois will spawn
+@export var poi_height_noise := FastNoiseLite.new()
 
 #Spawn Paramaters
 ## The minimum distance the spawns can be from the back of the map (incluscive)
@@ -61,15 +63,6 @@ const BLACK = preload("uid://cqnjj0rlirarr")
 var world_border_positive
 var world_border_negative
 
-func _ready():
-	world_border_positive = map_size / 2
-	world_border_negative = -map_size / 2
-	
-	var point = place_point(Vector3(0,-10,0),RED)
-	point.scale = Vector3(map_size.x,1,map_size.z)
-	
-	unpack()
-
 class BoxDistanceData:
 	var box_a: Node3D
 	var box_b: Node3D
@@ -79,20 +72,15 @@ class BoxDistanceData:
 		self.box_a = box_a
 		self.box_b = box_b
 		self.distance = distance
-
-func create_path(data:BoxDistanceData):
-	var path = PATH.instantiate() as Path3D
-	path.curve.add_point(data.box_a.position)
-	path.curve.add_point(data.box_b.position)
-	add_child(path)
 	
-func place_point(pos:Vector3,material:StandardMaterial3D) -> Node3D:
+func place_point(pos:Vector3,material:StandardMaterial3D,point_name:String) -> Node3D:
 	var point = STATIC_BOX.instantiate() as Node3D
 	point.position = pos
+	point.name = point_name
 	var point_mesh = point.get_node("./MeshInstance3D") as MeshInstance3D
 	point_mesh.material_override = material
 	if base_node:
-		base_node.add_child(point)
+		base_node.call_deferred("add_child",point)
 	return point
 	
 	
@@ -100,19 +88,25 @@ func place_point(pos:Vector3,material:StandardMaterial3D) -> Node3D:
 func place_spawns(rng:RandomNumberGenerator) -> Array[Node3D]:	
 	var x_offset = rng.randf_range(spawn_dist_min,spawn_dist_max)
 	var z_offset = rng.randf_range(world_border_negative.z + spawn_bound, world_border_positive.z - spawn_bound)
+	
+	var spawn_a_x = world_border_negative.x + x_offset
+	var spawn_a_z = z_offset
+	var spawn_b_x = world_border_positive.x - x_offset
+	var spawn_b_z = -z_offset
+	
 	var spawn_point_a_pos = Vector3(
-		world_border_negative.x + x_offset,
-		0,
-		z_offset
+		spawn_a_x,
+		poi_height_noise.get_noise_2d(spawn_a_x,spawn_a_z) * map_size.y / 2,
+		spawn_a_z
 	)
 	var spawn_point_b_pos = Vector3(
-		world_border_positive.x - x_offset,
-		0,
-		-z_offset
+		spawn_b_x,
+		poi_height_noise.get_noise_2d(spawn_b_x,spawn_b_z) * map_size.y / 2,
+		spawn_b_z
 	)
 	
-	var spawn_point_a = place_point(spawn_point_a_pos,RED)
-	var spawn_point_b = place_point(spawn_point_b_pos,BLUE)
+	var spawn_point_a = place_point(spawn_point_a_pos,RED,"SpawnA")
+	var spawn_point_b = place_point(spawn_point_b_pos,BLUE,"SpawnB")
 	
 	return [spawn_point_a,spawn_point_b]
 
@@ -164,7 +158,9 @@ func generate_poi_vector(rng:RandomNumberGenerator,pos_a:Vector3,pos_b:Vector3,b
 	
 	#Calculate the distance along the vector to place the point at
 	var result_vector = interm_pos + added_vector
-	return Vector3(result_vector.x,0,result_vector.y)
+	return Vector3(result_vector.x,
+	poi_height_noise.get_noise_2d(result_vector.x,result_vector.y) * map_size.y / 2,
+	result_vector.y)
 
 #Get evenly spaced numbers between a and b in an array, incluscive
 func get_evenly_spaced_numbers(a: float, b: float, n: int) -> Array[float]:
@@ -211,7 +207,7 @@ func generate_poi_points(rng:RandomNumberGenerator,spawn_a:Vector3,spawn_b:Vecto
 	#Determine final positions and place the points
 	for i in range(n_pois):
 		var new_vector = generate_poi_vector(rng,spawn_a,spawn_b,poi_dists[i],poi_hor_dists[i])
-		var new_point = place_point(new_vector,GREEN)
+		var new_point = place_point(new_vector,GREEN,"Poi")
 		result.append(new_point)
 	return result;
 
@@ -228,13 +224,15 @@ func generate_unrelated_poi_points(rng:RandomNumberGenerator, points:Array[Node3
 	var result :Array[Node3D]  = []
 	var n_points = rng.randi_range(min_unrelated_poi,max_unrelated_poi)
 	for i in range(unrelated_poi_placement_attempts):
+		var proposal_x = rng.randf_range(world_border_positive.x - unrelated_poi_bound,world_border_negative.x + unrelated_poi_bound)
+		var proposal_z = rng.randf_range(world_border_positive.z - unrelated_poi_bound,world_border_negative.z + unrelated_poi_bound)
 		var proposal := Vector3(
-			rng.randf_range(world_border_positive.x - unrelated_poi_bound,world_border_negative.x + unrelated_poi_bound),
-			0,
-			rng.randf_range(world_border_positive.z - unrelated_poi_bound,world_border_negative.z + unrelated_poi_bound)
+			proposal_x,
+			poi_height_noise.get_noise_2d(proposal_x,proposal_z) * map_size.y / 2,
+			proposal_z
 		)
 		if is_unrelated_poi_placement_valid(proposal,points):
-			var point := place_point(proposal,BLACK)
+			var point := place_point(proposal,BLACK,"UnrelatedPoi")
 			points.append(point)
 			result.append(point)
 		if result.size() >= n_pois:
@@ -244,6 +242,16 @@ func generate_unrelated_poi_points(rng:RandomNumberGenerator, points:Array[Node3
 		
 
 func unpack() -> Array[Unpacker]:
+	# Declare basic variables
+	world_border_positive = map_size / 2
+	world_border_negative = -map_size / 2
+	
+	var point = place_point(Vector3(0,-30,0),RED,"Bottom")
+	point.scale = Vector3(map_size.x,1,map_size.z)
+	
+	poi_height_noise.seed = seed
+	
+	# Initialize rng
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed
 	
