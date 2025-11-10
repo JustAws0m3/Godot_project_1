@@ -1,18 +1,21 @@
 extends Node3D
-class_name Level1ModelBox
+class_name BuildingModelBox
 
 const STATIC_BOX : PackedScene = preload("uid://cx7im3ai1vqkn")
 const GREEN = preload("uid://di5vgqcoebvue")
 
-@export var generate_box: bool
+@export var generate_box := true
 
 var positive_point : Vector3
 var negative_point : Vector3
 var points : Array[Vector3]
-var edges : Array[Level1ModelEdge]
+var edges : Array[BuildingModelEdge]
+var xz_flipped : bool
 
-
-func _init() -> void:
+func _init(position:Vector3,scale:Vector3,xz_flipped:bool) -> void:
+	self.position = position
+	self.scale = scale
+	
 	positive_point = self.position + (self.scale / 2)
 	negative_point = self.position - (self.scale / 2)
 
@@ -28,13 +31,15 @@ func _init() -> void:
 	]
 
 	edges = [
-		Level1ModelEdge.new(points[0],points[1],points[2],points[3]),
-		Level1ModelEdge.new(points[4],points[5],points[6],points[7]),
-		Level1ModelEdge.new(points[0],points[1],points[4],points[5]),
-		Level1ModelEdge.new(points[2],points[3],points[6],points[7]),
-		Level1ModelEdge.new(points[0],points[2],points[4],points[6]),
-		Level1ModelEdge.new(points[1],points[3],points[5],points[7]),
+		BuildingModelEdge.new(points[0],points[1],points[2],points[3]),
+		BuildingModelEdge.new(points[4],points[5],points[6],points[7]),
+		BuildingModelEdge.new(points[0],points[1],points[4],points[5]),
+		BuildingModelEdge.new(points[2],points[3],points[6],points[7]),
+		BuildingModelEdge.new(points[0],points[2],points[4],points[6]),
+		BuildingModelEdge.new(points[1],points[3],points[5],points[7]),
 	]
+	
+	self.xz_flipped = xz_flipped
 
 func _enter_tree() -> void:
 	if generate_box:
