@@ -5,7 +5,6 @@
 [ext_resource type="Shader" uid="uid://b7qm5k7pmbp8j" path="res://shader.tres" id="3_r0du0"]
 [ext_resource type="Script" uid="uid://drulj233d3uj4" path="res://Scripts/Generation/Unpackers/unpacker_master.gd" id="5_fos0i"]
 [ext_resource type="Script" uid="uid://cm7lmgu3k5rhw" path="res://Scripts/Generation/Unpackers/pois_unpacker.gd" id="6_3dxm6"]
-[ext_resource type="Script" uid="uid://crg3sqx6h33yo" path="res://blockout_unpacker.gd" id="6_lgr22"]
 
 [sub_resource type="Gradient" id="Gradient_r0du0"]
 interpolation_mode = 2
@@ -35,6 +34,14 @@ sky_rotation = Vector3(0, 0, 1.5707964)
 [sub_resource type="Compositor" id="Compositor_r0du0"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_3dxm6"]
+
+[sub_resource type="GDScript" id="GDScript_fos0i"]
+script/source = "extends Unpacker
+
+func unpack() -> Array[Unpacker]:
+	print(\"You should probably override the unpack method!\")
+	return []
+"
 
 [node name="Node3D" type="Node3D"]
 
@@ -66,4 +73,4 @@ next_unpack = [NodePath("../BlockoutUnpacker")]
 base_node = NodePath("../../Map")
 
 [node name="BlockoutUnpacker" type="Node" parent="UnpackerMaster"]
-script = ExtResource("6_lgr22")
+script = SubResource("GDScript_fos0i")
