@@ -7,6 +7,9 @@ extends Unpacker
 # Variable to store the accumulated weights of the models
 var models_max_waights = calculate_models_max_weights()
 
+# Variable to store all boxes placed
+var current_boxes = []
+
 func calculate_models_max_weights():
 	var result = []
 	var current_weight = 0.0
@@ -19,6 +22,7 @@ func pick_template(weight:float):
 	for i in range(len(models_max_waights)):
 		if weight < models_max_waights[i]:
 			return models[i]
+	return models[-1]
 
 func pick_next_template(rng:RandomNumberGenerator) -> AbstractRoomTemplate:
 	var chosen_weight = rng.randf_range(0,models_max_waights[-1])
@@ -30,4 +34,7 @@ func unpack() -> Array[Unpacker]:
 	rng.seed = seed
 	
 	var final_area = rng.randf_range(area_min,area_max)
+	var current_area = 0
+	while current_area < final_area:
+		var next_template = pick_next_template(rng)
 	return []
